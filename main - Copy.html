@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Babylon Template</title>
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.js"></script>
+</head>
+
+<body>
+
+    <canvas id="renderCanvas" touch-action="none"></canvas> <!-- touch-action="none" for best results from PEP -->
+
+    <script>
+        var canvas = document.getElementById("renderCanvas"); // Get the canvas element
+        var engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+
+        const addPointerInteraction = (scene) => {
+            scene.onPointerObservable.add((pointerInfo) => {
+                switch (pointerInfo.type) {
+                    case BABYLON.PointerEventTypes.POINTERDOWN:
+                        console.log("POINTER DOWN");
+                        break;
+                    case BABYLON.PointerEventTypes.POINTERUP:
+                        console.log("POINTER UP");
+                        break;
+                    case BABYLON.PointerEventTypes.POINTERMOVE:
+                        console.log("POINTER MOVE");
+                        break;
+                    case BABYLON.PointerEventTypes.POINTERWHEEL:
+                        console.log("POINTER WHEEL");
+                        break;
+                    case BABYLON.PointerEventTypes.POINTERPICK:
+                        console.log("POINTER PICK");
+                        break;
+                    case BABYLON.PointerEventTypes.POINTERTAP:
+                        console.log("POINTER TAP");
+                        break;
+                    case BABYLON.PointerEventTypes.POINTERDOUBLETAP:
+                        console.log("POINTER DOUBLE-TAP");
+                        break;
+                }
+            });
+        }
+
+        /******* Add the create scene function ******/
+        var createScene = function () {
+
+            // Create the scene space
+            var scene = new BABYLON.Scene(engine);
+            addPointerInteraction(scene);
+
+            // Add a camera to the scene and attach it to the canvas
+            var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, new BABYLON.Vector3(0, 0, 0), scene);
+            camera.attachControl(canvas, true);
+
+            // Add lights to the scene
+            var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
+            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+
+
+            /****************************Key Control Multiple Keys************************************************/
+
+            var map = {}; //object for multiple key presses
+            scene.actionManager = new BABYLON.ActionManager(scene);
+
+            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+                map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+
+            }));
+
+            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+                map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+            }));
+
+            scene.registerAfterRender(function () {
+                //------------ translate
+                if ((map["w"] || map["W"])) {
+                    translateCube(0, 0, 0.1)
+                };
+
+                if ((map["s"] || map["S"])) {
+                    translateCube(0, 0, -0.1)
+                };
+
+                if ((map["d"] || map["D"])) {
+                    translateCube(-0.1, 0, 0)
+                };
+
+                if ((map["a"] || map["A"])) {
+                    translateCube(0.1, 0, 0)
+                };
+
+                //------------ rotate
+                if ((map["i"] || map["I"])) {
+                    rotateCube(0, 0, 1)
+                };
+
+                if ((map["k"] || map["K"])) {
+                    rotateCube(0, 0, -1)
+                };
+
+                if ((map["j"] || map["J"])) {
+                    rotateFront(1)
+                };
+
+                if ((map["l"] || map["L"])) {
+                    rotateFront(-1)
+                };
+            });
+
+            let rubiks = [];
+            let flatRubiks = [];
+
+            let unit = 1.1;
+            var faceColors = new Array(6);
+            faceColors[0] = new BABYLON.Color4(1, 0, 0, 1);
+            faceColors[1] = new BABYLON.Color4(0, 1, 0, 1);
+            faceColors[2] = new BABYLON.Color4(0, 0, 1, 1);
+            faceColors[3] = new BABYLON.Color4(1, 1, 0, 1);
+            faceColors[4] = new BABYLON.Color4(0, 1, 1, 1);
+            faceColors[5] = new BABYLON.Color4(1, 1, 1, 1);
+
+            for (let x = 1; x <= 1; x++) {
+                rubiks.push([]);
+
+                for (let y = 1; y <= 3; y++) {
+                    rubiks[x - 1].push([]);
+
+                    for (let z = 1; z <= 3; z++) {
+                        let tempBox = BABYLON.MeshBuilder.CreateBox(`box${x}${y}${z}`, { faceColors }, scene);
+                        tempBox.position.x = x * unit;
+                        tempBox.position.y = y * unit;
+                        tempBox.position.z = z * unit;
+
+                        flatRubiks.push(tempBox);
+                        rubiks[x - 1][y - 1].push(tempBox)
+                    }
+                }
+            }
+
+            function degrees_to_radians(degrees) {
+                var pi = Math.PI;
+                return degrees * (pi / 180);
+            }
+
+            const translateCube = (x, y, z) => {
+                flatRubiks.forEach(cube => {
+                    cube.position.x += x;
+                    cube.position.y += y;
+                    cube.position.z += z;
+                });
+            }
+
+            const rotateCube = (x, y, z) => {
+                flatRubiks.forEach(cube => {
+                    cube.rotation.x += x;
+                    cube.rotation.y += y;
+                    cube.rotation.z += z;
+                });
+            }
+
+            const rotateFront = (angle) => {
+                let box1 = rubiks[0][1][1];
+                box1.rotation.x -= degrees_to_radians(angle);
+
+                for (let i = 0; i <= 0; i++) {
+                    for (let j = 0; j <= 2; j++) {
+                        for (let k = 0; k <= 2; k++) {
+                            let tmp = rubiks[i][j][k];
+                            let index = i + j + k;
+                            tmp.rotation.x = box1.rotation.x;
+                        }
+                    }
+                }
+
+                rubiks[0][1][2].rotation.x = box1.rotation.x;
+                rubiks[0][1][2].position.y = Math.cos(box1.rotation.x) * unit + box1.position.y;
+                rubiks[0][1][2].position.z = Math.sin(box1.rotation.x) * unit + box1.position.z;
+
+                rubiks[0][2][2].rotation.x = box1.rotation.x;
+                rubiks[0][2][2].position.y = Math.cos(box1.rotation.x + degrees_to_radians(45)) * unit + box1.position.y;
+                rubiks[0][2][2].position.z = Math.sin(box1.rotation.x + degrees_to_radians(45)) * unit + box1.position.z;
+
+                rubiks[0][2][1].rotation.x = box1.rotation.x;
+                rubiks[0][2][1].position.y = Math.cos(box1.rotation.x + degrees_to_radians(90)) * unit + box1.position.y;
+                rubiks[0][2][1].position.z = Math.sin(box1.rotation.x + degrees_to_radians(90)) * unit + box1.position.z;
+
+                rubiks[0][2][0].rotation.x = box1.rotation.x;
+                rubiks[0][2][0].position.y = Math.cos(box1.rotation.x + degrees_to_radians(125)) * unit + box1.position.y;
+                rubiks[0][2][0].position.z = Math.sin(box1.rotation.x + degrees_to_radians(125)) * unit + box1.position.z;
+
+                rubiks[0][1][0].rotation.x = box1.rotation.x;
+                rubiks[0][1][0].position.y = Math.cos(box1.rotation.x + degrees_to_radians(180)) * unit + box1.position.y;
+                rubiks[0][1][0].position.z = Math.sin(box1.rotation.x + degrees_to_radians(180)) * unit + box1.position.z;
+
+                rubiks[0][2][0].rotation.x = box1.rotation.x;
+                rubiks[0][2][0].position.y = Math.cos(box1.rotation.x + degrees_to_radians(225)) * unit + box1.position.y;
+                rubiks[0][2][0].position.z = Math.sin(box1.rotation.x + degrees_to_radians(225)) * unit + box1.position.z;
+
+                rubiks[0][0][1].rotation.x = box1.rotation.x;
+                rubiks[0][0][1].position.y = Math.cos(box1.rotation.x + degrees_to_radians(270)) * unit + box1.position.y;
+                rubiks[0][0][1].position.z = Math.sin(box1.rotation.x + degrees_to_radians(270)) * unit + box1.position.z;
+
+                // rubiks[0][0][2].rotation.x = box1.rotation.x;
+                // rubiks[0][0][2].position.y = Math.cos(box1.rotation.x + degrees_to_radians(45)) * 1.4 * unit + box1.position.y;
+                // rubiks[0][0][2].position.z = Math.sin(box1.rotation.x + degrees_to_radians(45)) * 1.4 * unit + box1.position.z;
+            }
+
+            window.rotateFront = rotateFront;
+            window.rubiks = rubiks;
+            window.translateCube = translateCube;
+
+            return scene;
+        };
+
+        /******* End of the create scene function ******/
+
+        var scene = createScene(); //Call the createScene function
+
+        // Register a render loop to repeatedly render the scene
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        // Watch for browser/canvas resize events
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+
+        canvas.addEventListener("onClick", () => {
+            alert('kaki');
+            myPoints1.push(new Vector3(Math.random() * 10 - 5), new Vector3(Math.random() * 10 - 5), new Vector3(Math.random() * 10 - 5));
+            line2 = BABYLON.MeshBuilder.CreateLines("lines", { points: myPoints1, instance: line2 }, scene);
+        })
+    </script>
+
+</body>
+
+</html>
