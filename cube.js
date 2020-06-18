@@ -16,23 +16,6 @@ class Cube {
         ];
 
         this.facesArr = facesArr1;
-        
-        // 000
-        // 001
-        // 002
-        // 010
-
-        // 011
-
-        // 012
-        // 020
-        // 021
-        // 022
-
-        // -1 -1    0  1
-        // -1  0    1 -1
-        // -1  1    1  1
-        //  0 -1    1  0
 
         for (let x = 0; x < this.size; x++) {
             this.values.push([]);
@@ -46,7 +29,7 @@ class Cube {
 
                         if (!(y == 1 && z == 1)) {
                             piece.addFace(this.facesArr[0][x]);
-                            this.facesArr[0][x].pieces.push(piece);
+                            this.facesArr[0][x].addPiece(piece);
                         }
                         else {
                             piece.addFace(this.facesArr[0][x]);
@@ -55,22 +38,22 @@ class Cube {
 
                         if (!(z == 1 && x == 1)) {
                             piece.addFace(this.facesArr[1][y]);
-                            this.facesArr[1][y].pieces.push(piece);
+                            this.facesArr[1][y].addPiece(piece);
                         }
-                        else{
+                        else {
                             piece.addFace(this.facesArr[1][y]);
                             this.facesArr[1][y].setCenterPiece(piece);
                         }
 
                         if (!(x == 1 && y == 1)) {
                             piece.addFace(this.facesArr[2][z]);
-                            this.facesArr[2][z].pieces.push(piece);
+                            this.facesArr[2][z].addPiece(piece);
                         }
-                        else{
+                        else {
                             piece.addFace(this.facesArr[2][z]);
                             this.facesArr[2][z].setCenterPiece(piece);
                         }
-                            
+
 
                         this.values[x][y].push(piece);
                         this.flatValues.push(piece);
@@ -162,24 +145,16 @@ class Piece {
 }
 
 class Face {
-    constructor(name, id, cube, pieces = []) {
+    constructor(name, id, cube, axis, pieces = []) {
         this.name = name;
         this.id = id;
         this.pieces = pieces;
         this.cube = cube;
+        this.axis = axis;
         this.centerPiece = undefined;
-
-        // this.edgePieceRotationOrder = {
-        //     [this.cube.faces.top.id + this.cube.faces.left.id]: [this.cube.faces.top.id, this.cube.faces.left.id],
-        //     [this.cube.faces.top.id + this.cubes.faces.right.id]: [this.cube.faces.top.id, this.cube.faces.right.id],
-        //     [this.cube.faces.bottom.id + this.cube.faces.right.id]: [this.cube.faces.bottom.id, this.cube.faces.right.id],
-        //     [this.cube.faces.bottom.id + this.cube.faces.left.id]: [this.cube.faces.bottom.id, this.cube.faces.left.id]
-        // };
     }
 
     orderByRotationValue() {
-        this.centerPiece.faces
-        this.pieces = this.pieces.sort((a, b) => a.rotationValue - b.rotationValue);
     }
 
     setCenterPiece(centerPiece) {
@@ -188,6 +163,49 @@ class Face {
 
     addPiece(newPiece) {
         this.pieces.push(newPiece);
+
+        let calcPieces = () => {
+            let center = [1,1,1];
+            for(let i =0;i<3;i++){
+                for(let j=0;j<2;j++){
+                    let tmp = center.map((val) => val);
+                    tmp[i] += Math.pow(-1,j) 
+                    tmp.push((3 * (tmp[0]+1)) + (5 *(tmp[1]+1)) + (7*(tmp[2]+1)))
+                   console.log(tmp)
+                }
+            }
+        }
+
+
+        // let indexes = [1, 4, 7, 8, 9, 6, 3, 2];
+
+        // let tmpPos = newPiece.getPos();
+        // let pos = Object.keys().filter((pos) => pos !== this.axis).map((pos) => tmpPos[pos]);
+        // let value = pos[0] + ((pos[1] * 3) + 5);
+        // let index = indexes.findIndex((val) => val = value);
+
+        // this.pieces[index] = newPiece;
+
+        //     [-1, -1],
+        //     [-1, 0],
+        //     [-1, 1],
+        //     [0, 1],
+        //     [1, 1],
+        //     [1, 0],
+        //     [1, -1],
+        //     [0, -1]
+        // ]
+        // cube.faces.front.pieces.map((piece) => Object.keys(piece.getPos()).map((pos) => piece[pos] - cube.faces.front.centerPiece.getPos()[pos]))
+
+        // let centerPos = this.centerPiece.getPos();
+
+        // if (centerPos.x != 1) {
+        //     let mask = [centerPos.y - newPiece.y, centerPos.z - newPiece.z];
+        // }
+
+        // this.pieces[index] = newPiece;
+
+        // this.pieces.push(newPiece);
     }
 
     removePiece(remPiece) {
@@ -205,6 +223,8 @@ class Face {
         pieces.push(p);
         p = pieces.shift()
         pieces.push(p);
+
+
 
         //update piece positions
         for (let i = 0; i < pieces.length - 2; i++) {
